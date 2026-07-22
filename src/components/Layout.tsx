@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
-import { forgetToken, getToken } from '../lib/session'
+import { SESSION_EVENT, forgetToken, getToken } from '../lib/session'
 
 const EVENT = {
   name: '2026 Koda Iron Games',
@@ -32,11 +32,22 @@ export default function Layout({
 
 function Header() {
   const location = useLocation()
-  const [token, setToken] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(getToken)
 
-  // Re-read on navigation: the token is written during /confirm and /manage,
-  // so the nav needs to pick it up without a reload.
-  useEffect(() => setToken(getToken()), [location.pathname])
+  // Three triggers, because the token can appear three ways:
+  //   - navigation (already stored, new page)
+  //   - SESSION_EVENT (written mid-page after a /confirm or /manage fetch)
+  //   - storage (signed out or in from another tab)
+  useEffect(() => {
+    const sync = () => setToken(getToken())
+    sync()
+    window.addEventListener(SESSION_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(SESSION_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [location.pathname])
 
   return (
     <header className="border-b border-line">
@@ -56,10 +67,7 @@ function Header() {
           {token && <Tab to={`/manage/${token}`}>My listing</Tab>}
           {token && (
             <button
-              onClick={() => {
-                forgetToken()
-                setToken(null)
-              }}
+              onClick={forgetToken}
               title="Forget this listing on this browser"
               className="ml-2 px-2 py-2 text-xs font-bold uppercase tracking-[0.14em] text-muted2 transition hover:text-muted"
             >
