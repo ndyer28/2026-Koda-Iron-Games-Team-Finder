@@ -72,7 +72,7 @@ export default function Manage() {
   }
 
   return (
-    <Layout width="wide">
+    <Layout>
       <div>
         {state.kind === 'loading' && <p className="text-muted2">Loading…</p>}
 
@@ -168,7 +168,7 @@ function Panel({
             <p className="mt-2 text-sm text-muted2">
               Reach out directly — they have your details too.
             </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 space-y-3">
               {matches.map((m) => (
                 <MatchCard key={m.email + m.phone} match={m} />
               ))}
@@ -177,7 +177,7 @@ function Panel({
         )}
       </section>
 
-      <section className="mt-14 max-w-lg border-t border-line pt-8">
+      <section className="mt-14 border-t border-line pt-8">
         <h2 className="text-lg text-txt">Done searching?</h2>
         <div className="mt-4 space-y-3">
           <button onClick={() => onAct('matched')} disabled={busy} className="btn-primary w-full">
