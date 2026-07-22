@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import Layout from '../components/Layout'
 import { FUNCTIONS_URL, NOTES_MAX, SUPABASE_ANON_KEY } from '../lib/config'
 
 type Status = { kind: 'idle' } | { kind: 'sending' } | { kind: 'sent' } | { kind: 'error'; message: string }
@@ -53,7 +54,7 @@ export default function Submit() {
 
   if (status.kind === 'sent') {
     return (
-      <Shell>
+      <Layout>
         <h1 className="text-2xl font-semibold text-neutral-50">Check your email</h1>
         <p className="mt-3 text-neutral-400 leading-relaxed">
           We sent you a link to confirm your listing. Click it and you'll go live on the
@@ -62,14 +63,14 @@ export default function Submit() {
         <p className="mt-4 text-sm text-neutral-500">
           Nothing after a few minutes? Check spam.
         </p>
-      </Shell>
+      </Layout>
     )
   }
 
   const sending = status.kind === 'sending'
 
   return (
-    <Shell>
+    <Layout>
       <h1 className="text-2xl font-semibold text-neutral-50">Find your team</h1>
       <p className="mt-2 text-neutral-400 leading-relaxed">
         Teams are three. Tell us who you've got and we'll email you when someone
@@ -198,14 +199,7 @@ export default function Submit() {
           Your email and phone are only shared with athletes you match with.
         </p>
       </form>
-    </Shell>
+    </Layout>
   )
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="min-h-screen bg-neutral-950 px-4 py-12 text-neutral-100">
-      <div className="mx-auto max-w-lg">{children}</div>
-    </main>
-  )
-}

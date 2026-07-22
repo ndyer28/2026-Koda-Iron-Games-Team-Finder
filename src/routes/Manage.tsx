@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import Layout from '../components/Layout'
 import { FUNCTIONS_URL, SUPABASE_ANON_KEY } from '../lib/config'
 
 type Listing = {
@@ -56,8 +57,8 @@ export default function Manage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-4 py-16 text-neutral-100">
-      <div className="mx-auto max-w-lg">
+    <Layout>
+      <div>
         {state.kind === 'loading' && <p className="text-neutral-500">Loading…</p>}
 
         {state.kind === 'error' && (
@@ -74,7 +75,7 @@ export default function Manage() {
 
         {state.kind === 'ready' && <Panel listing={state.listing} busy={busy} onAct={act} />}
       </div>
-    </main>
+    </Layout>
   )
 }
 

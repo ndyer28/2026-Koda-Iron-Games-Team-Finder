@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import Layout from '../components/Layout'
 import { supabase, type PublicListing } from '../lib/supabase'
 import { DIVISION_LABELS, SEX_LABELS } from '../lib/config'
 
@@ -36,8 +37,8 @@ export default function Board() {
   )
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-4 py-12 text-neutral-100">
-      <div className="mx-auto max-w-5xl">
+    <Layout width="wide">
+      <div>
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-neutral-50">Who's looking</h1>
@@ -132,7 +133,7 @@ export default function Board() {
           </div>
         )}
       </div>
-    </main>
+    </Layout>
   )
 }
 

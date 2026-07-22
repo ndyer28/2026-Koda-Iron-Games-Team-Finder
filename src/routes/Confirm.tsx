@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import Layout from '../components/Layout'
 import { FUNCTIONS_URL, SUPABASE_ANON_KEY } from '../lib/config'
 
 type State =
@@ -46,8 +47,8 @@ export default function Confirm() {
   }, [token])
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-4 py-16 text-neutral-100">
-      <div className="mx-auto max-w-lg">
+    <Layout>
+      <div>
         {state.kind === 'working' && (
           <p className="text-neutral-400">Confirming your listing…</p>
         )}
@@ -107,6 +108,6 @@ export default function Confirm() {
           </>
         )}
       </div>
-    </main>
+    </Layout>
   )
 }
