@@ -59,15 +59,15 @@ export default function Manage() {
   return (
     <Layout>
       <div>
-        {state.kind === 'loading' && <p className="text-neutral-500">Loading…</p>}
+        {state.kind === 'loading' && <p className="text-muted2">Loading…</p>}
 
         {state.kind === 'error' && (
           <>
-            <h1 className="text-2xl font-semibold text-neutral-50">
+            <h1 className="text-2xl font-semibold text-txt">
               That link didn't work
             </h1>
-            <p className="mt-3 text-neutral-400">{state.message}</p>
-            <Link to="/" className="mt-6 inline-block text-neutral-300 underline underline-offset-4">
+            <p className="mt-3 text-muted">{state.message}</p>
+            <Link to="/" className="mt-6 inline-block text-muted underline underline-offset-4">
               Back to sign-up
             </Link>
           </>
@@ -93,15 +93,15 @@ function Panel({
   if (done) {
     return (
       <>
-        <h1 className="text-2xl font-semibold text-neutral-50">
+        <h1 className="text-2xl font-semibold text-txt">
           {listing.status === 'matched' ? 'Congrats on your team' : 'Listing removed'}
         </h1>
-        <p className="mt-3 leading-relaxed text-neutral-400">
+        <p className="mt-3 leading-relaxed text-muted">
           You're off the board and won't get any more emails about this.
         </p>
         <Link
           to="/"
-          className="mt-6 inline-block rounded-lg bg-neutral-100 px-4 py-2.5 font-semibold text-neutral-900 hover:bg-white"
+          className="btn-primary w-full"
         >
           Sign up again
         </Link>
@@ -113,9 +113,9 @@ function Panel({
 
   return (
     <>
-      <h1 className="text-2xl font-semibold text-neutral-50">Your listing</h1>
+      <h1 className="text-2xl font-semibold text-txt">Your listing</h1>
 
-      <dl className="mt-6 space-y-2 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-sm">
+      <dl className="mt-6 space-y-2 border border-line bg-panel p-4 text-sm">
         <Row label="Name" value={listing.first_name} />
         <Row label="Bracket" value={listing.bracket} />
         <Row
@@ -129,20 +129,20 @@ function Panel({
         <button
           onClick={() => onAct('matched')}
           disabled={busy}
-          className="w-full rounded-lg bg-neutral-100 px-4 py-3 font-semibold text-neutral-900 transition hover:bg-white disabled:opacity-50"
+          className="btn-primary w-full"
         >
           We found our team
         </button>
         <button
           onClick={() => onAct('closed')}
           disabled={busy}
-          className="w-full rounded-lg border border-neutral-700 px-4 py-3 font-medium text-neutral-300 transition hover:border-neutral-500 disabled:opacity-50"
+          className="btn-ghost w-full"
         >
           Remove my listing
         </button>
       </div>
 
-      <p className="mt-4 text-center text-xs text-neutral-600">
+      <p className="mt-4 text-center text-xs text-muted2">
         Either one takes you off the board immediately.
       </p>
     </>
@@ -152,8 +152,8 @@ function Panel({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-3">
-      <dt className="w-24 shrink-0 text-neutral-500">{label}</dt>
-      <dd className="text-neutral-200">{value}</dd>
+      <dt className="w-24 shrink-0 text-muted2">{label}</dt>
+      <dd className="text-txt">{value}</dd>
     </div>
   )
 }

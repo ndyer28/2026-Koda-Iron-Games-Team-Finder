@@ -50,18 +50,18 @@ export default function Confirm() {
     <Layout>
       <div>
         {state.kind === 'working' && (
-          <p className="text-neutral-400">Confirming your listing…</p>
+          <p className="text-muted">Confirming your listing…</p>
         )}
 
         {state.kind === 'error' && (
           <>
-            <h1 className="text-2xl font-semibold text-neutral-50">
+            <h1 className="text-2xl font-semibold text-txt">
               That link didn't work
             </h1>
-            <p className="mt-3 text-neutral-400">{state.message}</p>
+            <p className="mt-3 text-muted">{state.message}</p>
             <Link
               to="/"
-              className="mt-6 inline-block rounded-lg bg-neutral-100 px-4 py-2.5 font-semibold text-neutral-900 hover:bg-white"
+              className="btn-primary"
             >
               Sign up again
             </Link>
@@ -70,14 +70,14 @@ export default function Confirm() {
 
         {state.kind === 'done' && (
           <>
-            <h1 className="text-2xl font-semibold text-neutral-50">
+            <h1 className="text-2xl font-semibold text-txt">
               {state.already ? "You're already on the board" : "You're on the board"}
             </h1>
 
-            <p className="mt-3 leading-relaxed text-neutral-400">
+            <p className="mt-3 leading-relaxed text-muted">
               {state.matches > 0 ? (
                 <>
-                  We found <strong className="text-neutral-100">{state.matches}</strong>{' '}
+                  We found <strong className="text-txt">{state.matches}</strong>{' '}
                   {state.matches === 1 ? 'athlete' : 'athletes'} you can team up with.
                   Their contact details are in your inbox.
                 </>
@@ -92,14 +92,14 @@ export default function Confirm() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/board"
-                className="rounded-lg bg-neutral-100 px-4 py-2.5 font-semibold text-neutral-900 hover:bg-white"
+                className="btn-primary"
               >
                 See the board
               </Link>
               {state.manageToken && (
                 <Link
                   to={`/manage/${state.manageToken}`}
-                  className="rounded-lg border border-neutral-700 px-4 py-2.5 font-medium text-neutral-300 hover:border-neutral-500"
+                  className="btn-ghost"
                 >
                   Manage my listing
                 </Link>

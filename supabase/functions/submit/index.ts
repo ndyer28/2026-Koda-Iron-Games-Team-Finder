@@ -84,11 +84,26 @@ Deno.serve(async (req) => {
   })
 
   if (!sent.ok) {
-    // The row exists but the athlete has no way to activate it. Tell them
-    // rather than showing a "check your email" screen that will never pay off.
     console.error('confirm email failed', sent.error)
+
+    // The listing can never be activated — its only confirm link was in an
+    // email that never arrived. Leaving it behind accumulates dead `pending`
+    // rows that nothing will ever clean up.
+    await supabase.from('listings').delete().eq('id', data.id)
+
+    // Resend's sandbox sender rejects every recipient except the account
+    // owner. That's a setup problem, not a typo, and saying "check the
+    // address" sends people hunting for a mistake they didn't make.
+    const sandboxed =
+      sent.error.includes('You can only send testing emails') ||
+      sent.error.includes('verify a domain')
+
     return json(
-      { error: "We couldn't send your confirmation email. Check the address and try again." },
+      {
+        error: sandboxed
+          ? 'Email sending is still in test mode, so we can only reach the organiser’s address right now. Please try again later.'
+          : "We couldn't send your confirmation email. Check the address and try again.",
+      },
       502,
     )
   }

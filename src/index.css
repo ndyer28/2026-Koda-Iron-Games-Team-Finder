@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+/* Design tokens lifted from the Iron Games sponsor site so the two read as one
+   event. Square corners, Anton headings, red as the only saturated colour. */
+@theme {
+  --color-ink: #0b0c0e;
+  --color-panel: #15171a;
+  --color-panel2: #1c1f23;
+  --color-line: #26292e;
+  --color-red: #c13b4a;
+  --color-redhi: #d64556;
+  --color-amber: #e8a33d;
+  --color-txt: #f5f6f7;
+  --color-muted: #a8aeb5;
+  --color-muted2: #7d838b;
+
+  --font-display: Anton, Impact, sans-serif;
+  --font-sans: Poppins, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background: var(--color-ink);
+    color: var(--color-txt);
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+}
+
+@layer components {
+  /* Squared, letter-spaced, uppercase — the sponsor site's button language.
+     Tailwind v4 cannot @apply a custom class from the same layer, so the
+     shared declarations are repeated rather than composed. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-3 text-xs font-bold
+           uppercase tracking-[0.14em] transition disabled:opacity-50
+           bg-red text-white hover:bg-redhi;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-5 py-3 text-xs font-bold
+           uppercase tracking-[0.14em] transition disabled:opacity-50
+           border border-line text-muted hover:border-muted2 hover:text-txt;
+  }
+
+  .panel {
+    @apply border border-line bg-panel;
+  }
+
+  .field {
+    @apply w-full border border-line bg-panel2 px-3 py-2.5 text-txt
+           placeholder:text-muted2 focus:border-red focus:outline-none;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-muted;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-muted2;
+  }
+}

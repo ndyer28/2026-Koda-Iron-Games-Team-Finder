@@ -97,7 +97,7 @@ export default function Admin() {
 
   if (!rows) {
     return (
-      <main className="grid min-h-screen place-items-center bg-neutral-950 px-4 text-neutral-100">
+      <main className="grid min-h-screen place-items-center bg-ink px-4 text-txt">
         <form onSubmit={login} className="w-full max-w-xs">
           <h1 className="text-lg font-semibold">Admin</h1>
           <input
@@ -106,12 +106,12 @@ export default function Admin() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             autoFocus
-            className="mt-4 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-neutral-100 focus:border-neutral-500 focus:outline-none"
+            className="mt-4 w-full border border-line bg-panel2 px-3 py-2.5 text-txt focus:border-red focus:outline-none"
           />
-          {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          {error && <p className="mt-3 text-sm text-red">{error}</p>}
           <button
             disabled={busy || !password}
-            className="mt-4 w-full rounded-lg bg-neutral-100 px-4 py-2.5 font-semibold text-neutral-900 disabled:opacity-50"
+            className="btn-primary mt-4 w-full"
           >
             {busy ? 'Checking…' : 'Sign in'}
           </button>
@@ -123,29 +123,29 @@ export default function Admin() {
   const counts = STATUSES.map((s) => [s, rows.filter((r) => r.status === s).length] as const)
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-4 py-10 text-neutral-100">
+    <main className="min-h-screen bg-ink px-4 py-10 text-txt">
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold">Listings</h1>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-muted2">
               {rows.length} total ·{' '}
               {counts.map(([s, n]) => `${n} ${s}`).join(' · ')}
             </p>
           </div>
           <button
             onClick={downloadCsv}
-            className="rounded-lg bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-white"
+            className="btn-primary"
           >
             Download CSV
           </button>
         </header>
 
-        {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-4 text-sm text-red">{error}</p>}
 
-        <div className="mt-6 overflow-x-auto rounded-xl border border-neutral-800">
+        <div className="mt-6 overflow-x-auto border border-line">
           <table className="w-full min-w-[900px] text-sm">
-            <thead className="bg-neutral-900 text-left text-xs uppercase tracking-wide text-neutral-500">
+            <thead className="bg-panel2 text-left text-xs uppercase tracking-wide text-muted2">
               <tr>
                 <th className="px-3 py-2.5 font-medium">Name</th>
                 <th className="px-3 py-2.5 font-medium">Contact</th>
@@ -155,35 +155,35 @@ export default function Admin() {
                 <th className="px-3 py-2.5 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-800">
+            <tbody className="divide-y divide-line">
               {rows.map((r) => (
                 <tr key={r.id} className="align-top">
                   <td className="px-3 py-3">
-                    <div className="font-medium text-neutral-100">{r.contact_name}</div>
+                    <div className="font-medium text-txt">{r.contact_name}</div>
                     {r.teammate_names && (
-                      <div className="text-xs text-neutral-500">+ {r.teammate_names}</div>
+                      <div className="text-xs text-muted2">+ {r.teammate_names}</div>
                     )}
-                    <div className="text-xs text-neutral-600">
+                    <div className="text-xs text-muted2">
                       {new Date(r.created_at).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-neutral-300">
+                  <td className="px-3 py-3 text-muted">
                     <div>{r.email}</div>
-                    <div className="text-neutral-500">{r.phone}</div>
+                    <div className="text-muted2">{r.phone}</div>
                   </td>
-                  <td className="px-3 py-3 capitalize text-neutral-300">
+                  <td className="px-3 py-3 capitalize text-muted">
                     {r.sex_division === 'male' ? "Men's" : "Women's"} {r.division}
                   </td>
-                  <td className="px-3 py-3 text-neutral-300">
+                  <td className="px-3 py-3 text-muted">
                     {r.current_size === 1 ? 'Solo' : 'Pair'}
                   </td>
-                  <td className="max-w-xs px-3 py-3 text-neutral-400">{r.notes}</td>
+                  <td className="max-w-xs px-3 py-3 text-muted">{r.notes}</td>
                   <td className="px-3 py-3">
                     <select
                       value={r.status}
                       disabled={busy}
                       onChange={(e) => setStatus(r.id, e.target.value)}
-                      className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-200"
+                      className="border border-line bg-panel2 px-2 py-1 text-txt"
                     >
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>{s}</option>

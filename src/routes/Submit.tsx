@@ -5,10 +5,10 @@ import { FUNCTIONS_URL, NOTES_MAX, SUPABASE_ANON_KEY } from '../lib/config'
 type Status = { kind: 'idle' } | { kind: 'sending' } | { kind: 'sent' } | { kind: 'error'; message: string }
 
 const field =
-  'w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-neutral-100 ' +
-  'placeholder:text-neutral-600 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500'
+  'w-full  border border-line bg-panel2 px-3 py-2.5 text-txt ' +
+  'placeholder:text-muted2 focus:border-red focus:outline-none  '
 
-const label = 'block text-sm font-medium text-neutral-300 mb-1.5'
+const label = 'label'
 
 export default function Submit() {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
@@ -55,12 +55,12 @@ export default function Submit() {
   if (status.kind === 'sent') {
     return (
       <Layout>
-        <h1 className="text-2xl font-semibold text-neutral-50">Check your email</h1>
-        <p className="mt-3 text-neutral-400 leading-relaxed">
+        <h1 className="text-2xl font-semibold text-txt">Check your email</h1>
+        <p className="mt-3 text-muted leading-relaxed">
           We sent you a link to confirm your listing. Click it and you'll go live on the
           board — and we'll email you any athletes you match with.
         </p>
-        <p className="mt-4 text-sm text-neutral-500">
+        <p className="mt-4 text-sm text-muted2">
           Nothing after a few minutes? Check spam.
         </p>
       </Layout>
@@ -71,8 +71,8 @@ export default function Submit() {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold text-neutral-50">Find your team</h1>
-      <p className="mt-2 text-neutral-400 leading-relaxed">
+      <h1 className="text-2xl font-semibold text-txt">Find your team</h1>
+      <p className="mt-2 text-muted leading-relaxed">
         Teams are three. Tell us who you've got and we'll email you when someone
         compatible signs up.
       </p>
@@ -126,10 +126,10 @@ export default function Submit() {
               <label
                 key={value}
                 className={
-                  'cursor-pointer rounded-lg border px-4 py-3 transition ' +
+                  'cursor-pointer  border px-4 py-3 transition ' +
                   (size === value
-                    ? 'border-neutral-100 bg-neutral-800'
-                    : 'border-neutral-700 hover:border-neutral-600')
+                    ? 'border-red bg-panel2'
+                    : 'border-line hover:')
                 }
               >
                 <input
@@ -140,8 +140,8 @@ export default function Submit() {
                   onChange={() => setSize(value)}
                   className="sr-only"
                 />
-                <span className="block font-medium text-neutral-100">{title}</span>
-                <span className="block text-sm text-neutral-500">{sub}</span>
+                <span className="block font-medium text-txt">{title}</span>
+                <span className="block text-sm text-muted2">{sub}</span>
               </label>
             ))}
           </div>
@@ -150,7 +150,7 @@ export default function Submit() {
         {size === 2 && (
           <div>
             <label className={label} htmlFor="teammate_names">
-              Your teammate's name <span className="text-neutral-600">(optional)</span>
+              Your teammate's name <span className="text-muted2">(optional)</span>
             </label>
             <input id="teammate_names" name="teammate_names" className={field} />
           </div>
@@ -158,7 +158,7 @@ export default function Submit() {
 
         <div>
           <label className={label} htmlFor="notes">
-            Anything else? <span className="text-neutral-600">(optional)</span>
+            Anything else? <span className="text-muted2">(optional)</span>
           </label>
           <textarea
             id="notes"
@@ -170,7 +170,7 @@ export default function Submit() {
             placeholder="Gym, experience, what you're looking for…"
             className={field + ' resize-none'}
           />
-          <p className="mt-1 text-right text-xs text-neutral-600">
+          <p className="mt-1 text-right text-xs text-muted2">
             {notes.length}/{NOTES_MAX}
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function Submit() {
         </div>
 
         {status.kind === 'error' && (
-          <p className="rounded-lg border border-red-900 bg-red-950/50 px-3 py-2.5 text-sm text-red-300">
+          <p className="border border-red/40 bg-red/10 px-3 py-2.5 text-sm text-red">
             {status.message}
           </p>
         )}
@@ -190,12 +190,12 @@ export default function Submit() {
         <button
           type="submit"
           disabled={sending}
-          className="w-full rounded-lg bg-neutral-100 px-4 py-3 font-semibold text-neutral-900 transition hover:bg-white disabled:opacity-50"
+          className="btn-primary w-full"
         >
           {sending ? 'Sending…' : 'Add me to the board'}
         </button>
 
-        <p className="text-center text-xs text-neutral-600">
+        <p className="text-center text-xs text-muted2">
           Your email and phone are only shared with athletes you match with.
         </p>
       </form>
