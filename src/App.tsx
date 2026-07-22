@@ -4,6 +4,7 @@ import Confirm from './routes/Confirm'
 import Board from './routes/Board'
 import Manage from './routes/Manage'
 import Admin from './routes/Admin'
+import Recover from './routes/Recover'
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/confirm/:token" element={<Confirm />} />
         <Route path="/board" element={<Board />} />
         <Route path="/manage/:token" element={<Manage />} />
+        <Route path="/recover" element={<Recover />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>

@@ -2,11 +2,13 @@ import { useState, type FormEvent } from 'react'
 import Layout from '../components/Layout'
 import { FUNCTIONS_URL, NOTES_MAX, SUPABASE_ANON_KEY } from '../lib/config'
 
-type Status = { kind: 'idle' } | { kind: 'sending' } | { kind: 'sent' } | { kind: 'error'; message: string }
+type Status =
+  | { kind: 'idle' }
+  | { kind: 'sending' }
+  | { kind: 'sent'; duplicate: boolean }
+  | { kind: 'error'; message: string }
 
-const field =
-  'w-full  border border-line bg-panel2 px-3 py-2.5 text-txt ' +
-  'placeholder:text-muted2 focus:border-red focus:outline-none  '
+const field = 'field'
 
 const label = 'label'
 
@@ -46,10 +48,25 @@ export default function Submit() {
         setStatus({ kind: 'error', message: json.error ?? 'Something went wrong.' })
         return
       }
-      setStatus({ kind: 'sent' })
+      setStatus({ kind: 'sent', duplicate: !!json.duplicate })
     } catch {
       setStatus({ kind: 'error', message: 'Could not reach the server. Check your connection.' })
     }
+  }
+
+  if (status.kind === 'sent' && status.duplicate) {
+    return (
+      <Layout>
+        <h1 className="text-2xl font-semibold text-txt">You're already on the board</h1>
+        <p className="mt-3 text-muted leading-relaxed">
+          That address already has a listing, so we didn't create a second one —
+          duplicates would show you twice on the board and in everyone's matches.
+        </p>
+        <p className="mt-3 text-muted leading-relaxed">
+          We've emailed you the link to manage the listing you already have.
+        </p>
+      </Layout>
+    )
   }
 
   if (status.kind === 'sent') {
@@ -129,7 +146,7 @@ export default function Submit() {
                   'cursor-pointer  border px-4 py-3 transition ' +
                   (size === value
                     ? 'border-red bg-panel2'
-                    : 'border-line hover:')
+                    : 'border-line hover:border-muted2')
                 }
               >
                 <input
@@ -168,7 +185,7 @@ export default function Submit() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Gym, experience, what you're looking for…"
-            className={field + ' resize-none'}
+            className="field resize-none"
           />
           <p className="mt-1 text-right text-xs text-muted2">
             {notes.length}/{NOTES_MAX}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { FUNCTIONS_URL, SUPABASE_ANON_KEY } from '../lib/config'
+import { rememberToken } from '../lib/session'
 
 type State =
   | { kind: 'working' }
@@ -34,6 +35,8 @@ export default function Confirm() {
           setState({ kind: 'error', message: body.error ?? 'Something went wrong.' })
           return
         }
+        // They clicked a real link — remember them on this browser.
+        if (body.manage_token) rememberToken(body.manage_token)
         setState({
           kind: 'done',
           matches: body.matches ?? 0,

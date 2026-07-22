@@ -8,7 +8,12 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clientIp, corsHeaders, hashIp, json } from '../_shared/cors.ts'
 import { parseSubmission } from '../_shared/validate.ts'
 import { sendEmail } from '../_shared/email.ts'
-import { confirmEmail, type Listing } from '../_shared/templates.ts'
+import {
+  bracketLabel,
+  confirmEmail,
+  recoveryEmail,
+  type Listing,
+} from '../_shared/templates.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -60,6 +65,41 @@ Deno.serve(async (req) => {
       { error: "That's a few too many sign-ups from here. Try again in an hour." },
       429,
     )
+  }
+
+  // Already listed? Send their existing link instead of creating a second
+  // listing. Duplicates split one athlete across multiple board cards and make
+  // every match list them twice.
+  const { data: existing } = await supabase.rpc('listings_for_email', {
+    p_email: parsed.value.email,
+    p_event_id: EVENT_ID,
+  })
+
+  const dupes = (existing ?? []) as {
+    id: string
+    manage_token: string
+    current_size: number
+    division: string
+    sex_division: string
+  }[]
+
+  if (dupes.length > 0) {
+    const mail = recoveryEmail(
+      dupes.map((l) => ({
+        manage_token: l.manage_token,
+        bracket: bracketLabel(l),
+        current_size: l.current_size,
+      })),
+      true,
+    )
+    const sent = await sendEmail(parsed.value.email, mail.subject, mail.text)
+    await supabase.from('email_log').insert({
+      listing_id: dupes[0].id,
+      kind: 'recovery',
+      ok: sent.ok,
+      error: sent.ok ? null : sent.error,
+    })
+    return json({ ok: true, duplicate: true })
   }
 
   const { data, error } = await supabase

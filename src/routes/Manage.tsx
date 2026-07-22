@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { FUNCTIONS_URL, SUPABASE_ANON_KEY } from '../lib/config'
+import { forgetToken, rememberToken } from '../lib/session'
 
 type Listing = {
   first_name: string
@@ -11,9 +12,19 @@ type Listing = {
   status: string
 }
 
+type Match = {
+  contact_name: string
+  email: string
+  phone: string
+  teammate_names: string | null
+  current_size: number
+  bracket: string
+  notes: string | null
+}
+
 type State =
   | { kind: 'loading' }
-  | { kind: 'ready'; listing: Listing }
+  | { kind: 'ready'; listing: Listing; matches: Match[] }
   | { kind: 'error'; message: string }
 
 export default function Manage() {
@@ -33,22 +44,26 @@ export default function Manage() {
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error ?? 'Something went wrong.')
-      return body.listing as Listing
+      return body as { listing: Listing; matches?: Match[] }
     },
     [token],
   )
 
   useEffect(() => {
     call('get')
-      .then((listing) => setState({ kind: 'ready', listing }))
+      .then((body) => {
+        // Valid token — remember it so this browser recognises them from now on.
+        if (token) rememberToken(token)
+        setState({ kind: 'ready', listing: body.listing, matches: body.matches ?? [] })
+      })
       .catch((e) => setState({ kind: 'error', message: String(e.message) }))
-  }, [call])
+  }, [call, token])
 
   async function act(action: 'matched' | 'closed') {
     setBusy(true)
     try {
-      const listing = await call(action)
-      setState({ kind: 'ready', listing })
+      const body = await call(action)
+      setState({ kind: 'ready', listing: body.listing, matches: [] })
     } catch (e) {
       setState({ kind: 'error', message: String((e as Error).message) })
     } finally {
@@ -57,23 +72,28 @@ export default function Manage() {
   }
 
   return (
-    <Layout>
+    <Layout width="wide">
       <div>
         {state.kind === 'loading' && <p className="text-muted2">Loading…</p>}
 
         {state.kind === 'error' && (
           <>
-            <h1 className="text-2xl font-semibold text-txt">
-              That link didn't work
-            </h1>
+            <h1 className="text-2xl font-semibold text-txt">That link didn't work</h1>
             <p className="mt-3 text-muted">{state.message}</p>
-            <Link to="/" className="mt-6 inline-block text-muted underline underline-offset-4">
-              Back to sign-up
-            </Link>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to="/" className="btn-primary">
+                Sign up
+              </Link>
+              <Link to="/recover" className="btn-ghost">
+                Email me my link
+              </Link>
+            </div>
           </>
         )}
 
-        {state.kind === 'ready' && <Panel listing={state.listing} busy={busy} onAct={act} />}
+        {state.kind === 'ready' && (
+          <Panel listing={state.listing} matches={state.matches} busy={busy} onAct={act} />
+        )}
       </div>
     </Layout>
   )
@@ -81,10 +101,12 @@ export default function Manage() {
 
 function Panel({
   listing,
+  matches,
   busy,
   onAct,
 }: {
   listing: Listing
+  matches: Match[]
   busy: boolean
   onAct: (a: 'matched' | 'closed') => void
 }) {
@@ -92,20 +114,17 @@ function Panel({
 
   if (done) {
     return (
-      <>
+      <div className="mx-auto max-w-lg">
         <h1 className="text-2xl font-semibold text-txt">
           {listing.status === 'matched' ? 'Congrats on your team' : 'Listing removed'}
         </h1>
         <p className="mt-3 leading-relaxed text-muted">
           You're off the board and won't get any more emails about this.
         </p>
-        <Link
-          to="/"
-          className="btn-primary w-full"
-        >
+        <Link to="/" className="btn-primary mt-6" onClick={() => forgetToken()}>
           Sign up again
         </Link>
-      </>
+      </div>
     )
   }
 
@@ -113,47 +132,102 @@ function Panel({
 
   return (
     <>
-      <h1 className="text-2xl font-semibold text-txt">Your listing</h1>
+      <header>
+        <p className="eyebrow">Your listing</p>
+        <h1 className="mt-1.5 text-2xl font-semibold text-txt">
+          {listing.bracket} · {listing.current_size === 1 ? 'Solo' : 'Pair'}
+        </h1>
+        <p className="mt-2 text-muted">
+          Looking for {short} more {short === 1 ? 'athlete' : 'athletes'}
+          {listing.status === 'pending' && ' · not confirmed yet'}
+        </p>
+      </header>
 
-      <dl className="mt-6 space-y-2 border border-line bg-panel p-4 text-sm">
-        <Row label="Name" value={listing.first_name} />
-        <Row label="Bracket" value={listing.bracket} />
-        <Row
-          label="Looking for"
-          value={`${short} more ${short === 1 ? 'athlete' : 'athletes'}`}
-        />
-        {listing.notes && <Row label="Notes" value={listing.notes} />}
-      </dl>
+      {listing.status === 'pending' && (
+        <p className="mt-6 border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-amber">
+          This listing isn't live yet. Click the confirm link in your email to
+          appear on the board and start matching.
+        </p>
+      )}
 
-      <div className="mt-8 space-y-3">
-        <button
-          onClick={() => onAct('matched')}
-          disabled={busy}
-          className="btn-primary w-full"
-        >
-          We found our team
-        </button>
-        <button
-          onClick={() => onAct('closed')}
-          disabled={busy}
-          className="btn-ghost w-full"
-        >
-          Remove my listing
-        </button>
-      </div>
+      <section className="mt-10">
+        <h2 className="text-lg text-txt">
+          {matches.length > 0
+            ? `${matches.length} ${matches.length === 1 ? 'athlete' : 'athletes'} you can team up with`
+            : 'No matches yet'}
+        </h2>
 
-      <p className="mt-4 text-center text-xs text-muted2">
-        Either one takes you off the board immediately.
-      </p>
+        {matches.length === 0 ? (
+          <p className="mt-3 text-muted">
+            {listing.status === 'active'
+              ? "Nobody compatible has signed up yet. We'll email you the moment someone does — and they'll show up here."
+              : 'Confirm your listing to start matching.'}
+          </p>
+        ) : (
+          <>
+            <p className="mt-2 text-sm text-muted2">
+              Reach out directly — they have your details too.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {matches.map((m) => (
+                <MatchCard key={m.email + m.phone} match={m} />
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="mt-14 max-w-lg border-t border-line pt-8">
+        <h2 className="text-lg text-txt">Done searching?</h2>
+        <div className="mt-4 space-y-3">
+          <button onClick={() => onAct('matched')} disabled={busy} className="btn-primary w-full">
+            We found our team
+          </button>
+          <button onClick={() => onAct('closed')} disabled={busy} className="btn-ghost w-full">
+            Remove my listing
+          </button>
+        </div>
+        <p className="mt-4 text-center text-xs text-muted2">
+          Either one takes you off the board immediately.
+        </p>
+      </section>
     </>
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function MatchCard({ match }: { match: Match }) {
   return (
-    <div className="flex gap-3">
-      <dt className="w-24 shrink-0 text-muted2">{label}</dt>
-      <dd className="text-txt">{value}</dd>
-    </div>
+    <article className="panel p-4">
+      <h3 className="text-base text-txt">{match.contact_name}</h3>
+      {match.teammate_names && (
+        <p className="mt-0.5 text-xs text-muted2">with {match.teammate_names}</p>
+      )}
+      <p className="mt-1 text-sm text-muted">
+        {match.current_size === 1 ? 'Solo' : 'Pair'} · needs {3 - match.current_size} more
+      </p>
+
+      {match.notes && (
+        <p className="mt-3 text-sm leading-relaxed text-muted">{match.notes}</p>
+      )}
+
+      <dl className="mt-4 space-y-1 border-t border-line pt-3 text-sm">
+        <div className="flex gap-2">
+          <dt className="w-12 shrink-0 text-muted2">Email</dt>
+          <dd className="min-w-0 break-all">
+            <a href={`mailto:${match.email}`} className="text-txt underline underline-offset-4">
+              {match.email}
+            </a>
+          </dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="w-12 shrink-0 text-muted2">Phone</dt>
+          <dd>
+            <a href={`tel:${match.phone}`} className="text-txt underline underline-offset-4">
+              {match.phone}
+            </a>
+          </dd>
+        </div>
+      </dl>
+    </article>
   )
 }

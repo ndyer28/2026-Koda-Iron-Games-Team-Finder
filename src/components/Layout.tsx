@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
-import { NavLink, Link } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { NavLink, Link, useLocation } from 'react-router-dom'
+import { forgetToken, getToken } from '../lib/session'
 
 const EVENT = {
   name: '2026 Koda Iron Games',
@@ -30,6 +31,13 @@ export default function Layout({
 }
 
 function Header() {
+  const location = useLocation()
+  const [token, setToken] = useState<string | null>(null)
+
+  // Re-read on navigation: the token is written during /confirm and /manage,
+  // so the nav needs to pick it up without a reload.
+  useEffect(() => setToken(getToken()), [location.pathname])
+
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-5">
@@ -40,11 +48,24 @@ function Header() {
           </span>
         </Link>
 
-        <nav className="flex">
+        <nav className="flex items-center">
           <Tab to="/" end>
             Sign up
           </Tab>
           <Tab to="/board">Board</Tab>
+          {token && <Tab to={`/manage/${token}`}>My listing</Tab>}
+          {token && (
+            <button
+              onClick={() => {
+                forgetToken()
+                setToken(null)
+              }}
+              title="Forget this listing on this browser"
+              className="ml-2 px-2 py-2 text-xs font-bold uppercase tracking-[0.14em] text-muted2 transition hover:text-muted"
+            >
+              Sign out
+            </button>
+          )}
         </nav>
       </div>
     </header>
@@ -76,7 +97,14 @@ function Footer() {
           {EVENT.dates} · {EVENT.venue}
         </p>
         <p>Teams of three · Rx, Scaled, Masters · Men's and Women's</p>
-        <p>Managing an existing listing? Use the link in your confirmation email.</p>
+        <p>
+          Managing an existing listing? Use the link in your confirmation email,
+          or{' '}
+          <Link to="/recover" className="text-muted underline underline-offset-4">
+            have it sent again
+          </Link>
+          .
+        </p>
       </div>
     </footer>
   )

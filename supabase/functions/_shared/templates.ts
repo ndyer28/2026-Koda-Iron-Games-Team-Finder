@@ -152,6 +152,43 @@ export function closedEmail(l: Listing, reason: 'matched' | 'closed') {
   }
 }
 
+// 5 -------------------------------------------------------------------------
+/** Sent by /recover, and by submit when someone signs up a second time. */
+export function recoveryEmail(
+  links: { manage_token: string; bracket: string; current_size: number }[],
+  duplicate: boolean,
+) {
+  const one = links.length === 1
+
+  return {
+    subject: duplicate ? "You're already on the board" : 'Your listing link',
+    text: [
+      duplicate
+        ? "You've already got a listing, so we didn't create a second one —"
+        : 'Here you go —',
+      one
+        ? `here's the link to manage ${duplicate ? 'it' : 'your listing'}:`
+        : `here are your ${links.length} listings:`,
+      '',
+      links
+        .map((l) =>
+          [
+            `  ${l.bracket} · ${l.current_size === 1 ? 'Solo' : 'Pair'} — ${needsLabel(l.current_size)}`,
+            `  ${BASE}/manage/${l.manage_token}`,
+          ].join('\n'),
+        )
+        .join('\n\n'),
+      '',
+      duplicate
+        ? 'Want to change division or roster size? Remove the old listing first, then sign up again.'
+        : "That link is all you need — no password, no account.",
+      '',
+      "Didn't ask for this? Someone typed your address by mistake. Ignore it;",
+      'nothing has changed and no details were shared.',
+    ].join('\n'),
+  }
+}
+
 function firstName(full: string): string {
   return full.trim().split(' ')[0]
 }

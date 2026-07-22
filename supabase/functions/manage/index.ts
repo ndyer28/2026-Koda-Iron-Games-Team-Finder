@@ -60,7 +60,30 @@ Deno.serve(async (req) => {
     status: listing.status,
   }
 
-  if (action === 'get') return json({ ok: true, listing: safe })
+  if (action === 'get') {
+    // Contact details of the people this listing matches with. The manage
+    // token is the authorisation — the same information already goes to this
+    // address by email, so showing it in the app leaks nothing new. Note this
+    // returns OTHER people's details, never the holder's own.
+    let matches: unknown[] = []
+    if (listing.status === 'active') {
+      const { data, error: matchErr } = await db.rpc('find_matches', {
+        p_listing_id: listing.id,
+      })
+      if (matchErr) console.error('find_matches failed', matchErr)
+      matches = ((data ?? []) as Listing[]).map((m) => ({
+        first_name: m.contact_name.trim().split(' ')[0],
+        contact_name: m.contact_name,
+        email: m.email,
+        phone: m.phone,
+        teammate_names: m.teammate_names,
+        current_size: m.current_size,
+        bracket: bracketLabel(m),
+        notes: m.notes,
+      }))
+    }
+    return json({ ok: true, listing: safe, matches })
+  }
 
   if (listing.status === 'matched' || listing.status === 'closed') {
     return json({ ok: true, listing: safe, already: true })
