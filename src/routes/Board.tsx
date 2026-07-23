@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { supabase, type PublicListing } from '../lib/supabase'
-import { DIVISION_LABELS, SEX_LABELS } from '../lib/config'
+import { DIVISION_LABELS, FUNCTIONS_URL, SEX_LABELS, SUPABASE_ANON_KEY } from '../lib/config'
+import { getToken } from '../lib/session'
+
+/** Contact details for listings the viewer can actually team up with. */
+type Contact = { contact_name: string; email: string; phone: string }
 
 const DIVISIONS = ['rx', 'scaled', 'masters'] as const
 const SEXES = ['male', 'female'] as const
@@ -18,6 +22,11 @@ export default function Board() {
   const [div, setDiv] = useState<DivFilter>('all')
   const [size, setSize] = useState<SizeFilter>('all')
 
+  // Contact details for the viewer's own matches, keyed by listing id.
+  // Empty for anyone without a listing — the board itself never carries
+  // contact info, and the server decides what this map contains.
+  const [contacts, setContacts] = useState<Map<string, Contact>>(new Map())
+
   useEffect(() => {
     supabase
       .from('public_listings')
@@ -27,6 +36,34 @@ export default function Board() {
         if (error) setError('Could not load the board.')
         else setListings(data as PublicListing[])
       })
+  }, [])
+
+  useEffect(() => {
+    const token = getToken()
+    if (!token) return
+
+    fetch(`${FUNCTIONS_URL}/manage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ token, action: 'get' }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (!body?.matches) return
+        setContacts(
+          new Map(
+            (body.matches as (Contact & { id: string })[]).map((m) => [
+              m.id,
+              { contact_name: m.contact_name, email: m.email, phone: m.phone },
+            ]),
+          ),
+        )
+      })
+      // A stale or revoked token just means no unlocks. Nothing to report.
+      .catch(() => {})
   }, [])
 
   const visible = (listings ?? []).filter(
@@ -90,6 +127,17 @@ export default function Board() {
           </div>
         )}
 
+        {contacts.size > 0 && (
+          <p className="mt-6 border border-red/40 bg-red/10 px-4 py-3 text-sm text-muted">
+            <strong className="text-txt">
+              {contacts.size} {contacts.size === 1 ? 'athlete' : 'athletes'} below
+              can complete your team.
+            </strong>{' '}
+            Their contact details are unlocked on their cards. Everyone else's
+            stays private.
+          </p>
+        )}
+
         {error && <p className="mt-10 text-red">{error}</p>}
         {!listings && !error && <p className="mt-10 text-muted2">Loading…</p>}
 
@@ -123,7 +171,7 @@ export default function Board() {
                     </h2>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {bucket.map((l) => (
-                        <Card key={l.id} listing={l} />
+                        <Card key={l.id} listing={l} contact={contacts.get(l.id)} />
                       ))}
                     </div>
                   </section>
@@ -171,14 +219,27 @@ function Filters<T extends string | number>({
   )
 }
 
-function Card({ listing }: { listing: PublicListing }) {
+function Card({
+  listing,
+  contact,
+}: {
+  listing: PublicListing
+  contact?: Contact
+}) {
   const [asked, setAsked] = useState(false)
   const short = 3 - listing.current_size
 
   return (
-    <article className="border border-line bg-panel p-4">
+    <article
+      className={
+        'border p-4 ' +
+        (contact ? 'border-red/50 bg-panel' : 'border-line bg-panel')
+      }
+    >
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="font-semibold text-txt">{listing.first_name}</h3>
+        <h3 className="font-semibold text-txt">
+          {contact ? contact.contact_name : listing.first_name}
+        </h3>
         <span className="shrink-0 text-xs uppercase tracking-wide text-muted2">
           {listing.current_size === 1 ? 'Solo' : 'Pair'}
         </span>
@@ -192,7 +253,37 @@ function Card({ listing }: { listing: PublicListing }) {
         <p className="mt-3 text-sm leading-relaxed text-muted">{listing.notes}</p>
       )}
 
-      {asked ? (
+      {contact ? (
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red">
+            You match
+          </p>
+          <dl className="mt-2 space-y-1 text-sm">
+            <div className="flex gap-2">
+              <dt className="w-12 shrink-0 text-muted2">Email</dt>
+              <dd className="min-w-0 break-all">
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="text-txt underline underline-offset-4"
+                >
+                  {contact.email}
+                </a>
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="w-12 shrink-0 text-muted2">Phone</dt>
+              <dd>
+                <a
+                  href={`tel:${contact.phone}`}
+                  className="text-txt underline underline-offset-4"
+                >
+                  {contact.phone}
+                </a>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      ) : asked ? (
         <p className="mt-4 bg-panel2 px-3 py-2.5 text-sm leading-relaxed text-muted">
           Add your own listing and we'll email you both with contact details
           automatically. We don't hand out anyone's email or phone.

@@ -72,6 +72,9 @@ Deno.serve(async (req) => {
       })
       if (matchErr) console.error('find_matches failed', matchErr)
       matches = ((data ?? []) as Listing[]).map((m) => ({
+        // id lets /board correlate these against public_listings so it can
+        // unlock contact details on exactly the cards you match with.
+        id: m.id,
         first_name: m.contact_name.trim().split(' ')[0],
         contact_name: m.contact_name,
         email: m.email,
