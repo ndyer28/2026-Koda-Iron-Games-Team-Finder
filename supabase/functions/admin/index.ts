@@ -91,10 +91,13 @@ Deno.serve(async (req) => {
       if (v.replace(/\D/g, '').length < 7) return json({ error: 'Phone looks wrong.' }, 400)
       patch.phone = v
     }
-    if ('division' in body) {
-      const v = str(body.division)
-      if (!['rx', 'scaled', 'masters'].includes(v)) return json({ error: 'Bad division.' }, 400)
-      patch.division = v
+    if ('divisions' in body) {
+      const raw = Array.isArray(body.divisions) ? body.divisions : []
+      const v = [...new Set(raw.map(str))].filter((d) =>
+        ['rx', 'scaled', 'masters'].includes(d),
+      )
+      if (v.length === 0) return json({ error: 'Pick at least one division.' }, 400)
+      patch.divisions = v
     }
     if ('sex_division' in body) {
       const v = str(body.sex_division)

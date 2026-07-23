@@ -74,7 +74,7 @@ export default function Board() {
   const visible = (listings ?? []).filter(
     (l) =>
       (sex === 'all' || l.sex_division === sex) &&
-      (div === 'all' || l.division === div) &&
+      (div === 'all' || l.divisions.includes(div)) &&
       (size === 'all' || l.current_size === size),
   )
 
@@ -163,7 +163,7 @@ export default function Board() {
             {SEXES.map((s) =>
               DIVISIONS.map((division) => {
                 const bucket = visible.filter(
-                  (l) => l.sex_division === s && l.division === division,
+                  (l) => l.sex_division === s && l.divisions.includes(division),
                 )
                 if (bucket.length === 0) return null
                 return (
@@ -270,6 +270,12 @@ function Card({
       <p className="mt-1 text-sm text-muted">
         Needs {short} more {short === 1 ? 'athlete' : 'athletes'}
       </p>
+
+      {listing.divisions.length > 1 && (
+        <p className="mt-1 text-xs text-muted2">
+          Open to {listing.divisions.map((d) => DIVISION_LABELS[d]).join(', ')}
+        </p>
+      )}
 
       {listing.notes && (
         <p className="mt-3 text-sm leading-relaxed text-muted">{listing.notes}</p>

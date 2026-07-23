@@ -21,10 +21,15 @@ which is a roster fragment with a size.
 
 Two listings match when **all** of these hold:
 
-1. same `division`
+1. their `divisions` **overlap** (Postgres `&&`)
 2. same `sex_division`
 3. both `status = 'active'`
 4. `a.current_size + b.current_size <= 3`
+
+`divisions` is an array because athletes are often willing to compete in more
+than one ("I'll do Rx or Scaled"). Forcing a single choice hid real matches.
+A listing appears in every division bucket it's open to, so someone browsing
+Scaled sees everyone who would take a Scaled spot.
 
 Rule 4 is the whole trick. Solo+solo (2) and solo+pair (3) pass; pair+pair (4)
 fails. No special-casing, no separate code path for "is this a pair".

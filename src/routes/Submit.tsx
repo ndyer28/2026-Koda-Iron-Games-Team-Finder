@@ -16,9 +16,14 @@ export default function Submit() {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const [size, setSize] = useState<1 | 2>(1)
   const [notes, setNotes] = useState('')
+  const [divisions, setDivisions] = useState<string[]>([])
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (divisions.length === 0) {
+      setStatus({ kind: 'error', message: 'Pick at least one division.' })
+      return
+    }
     setStatus({ kind: 'sending' })
 
     const fd = new FormData(e.currentTarget)
@@ -26,7 +31,7 @@ export default function Submit() {
       contact_name: fd.get('contact_name'),
       email: fd.get('email'),
       phone: fd.get('phone'),
-      division: fd.get('division'),
+      divisions,
       sex_division: fd.get('sex_division'),
       current_size: Number(fd.get('current_size')),
       teammate_names: fd.get('teammate_names'),
@@ -113,18 +118,9 @@ export default function Submit() {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <label className={label} htmlFor="division">Division</label>
+            <label className={label} htmlFor="sex_division">Men's or women's</label>
             {/* Placeholder option must not be `disabled` — that bars the select
                 from constraint validation, so `required` stops blocking. */}
-            <select id="division" name="division" required defaultValue="" className={field}>
-              <option value="">Choose…</option>
-              <option value="rx">Rx</option>
-              <option value="scaled">Scaled</option>
-              <option value="masters">Masters</option>
-            </select>
-          </div>
-          <div>
-            <label className={label} htmlFor="sex_division">Men's or women's</label>
             <select id="sex_division" name="sex_division" required defaultValue="" className={field}>
               <option value="">Choose…</option>
               <option value="male">Men's</option>
@@ -132,6 +128,45 @@ export default function Submit() {
             </select>
           </div>
         </div>
+
+        <fieldset>
+          <legend className={label}>
+            Divisions <span className="text-muted2">(pick any you'd compete in)</span>
+          </legend>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {([
+              ['rx', 'Rx'],
+              ['scaled', 'Scaled'],
+              ['masters', 'Masters'],
+            ] as const).map(([value, title]) => {
+              const on = divisions.includes(value)
+              return (
+                <label
+                  key={value}
+                  className={
+                    'cursor-pointer border px-4 py-3 text-center transition ' +
+                    (on ? 'border-red bg-panel2' : 'border-line hover:border-muted2')
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() =>
+                      setDivisions((prev) =>
+                        on ? prev.filter((d) => d !== value) : [...prev, value],
+                      )
+                    }
+                    className="sr-only"
+                  />
+                  <span className="block font-medium text-txt">{title}</span>
+                </label>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-xs text-muted2">
+            Picking more than one means more possible teammates.
+          </p>
+        </fieldset>
 
         <fieldset>
           <legend className={label}>I'm signing up as</legend>

@@ -25,11 +25,18 @@
     font-family: var(--font-sans);
   }
 
-  h1, h2, h3 {
+  /* Anton is a display face — great for page titles, poor for names and
+     data. Headings opt in via .display rather than getting it by tag, so a
+     person's name never renders in it. */
+  h1, h2 {
     font-family: var(--font-display);
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.02em;
+  }
+
+  h3 {
+    font-weight: 600;
   }
 }
 

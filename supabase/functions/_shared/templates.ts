@@ -9,7 +9,7 @@ export type Listing = {
   contact_name: string
   email: string
   phone: string
-  division: string
+  divisions: string[]
   sex_division: string
   current_size: number
   notes: string | null
@@ -27,8 +27,11 @@ const DIVISION: Record<string, string> = {
 }
 const SEX: Record<string, string> = { male: "Men's", female: "Women's" }
 
-export function bracketLabel(l: Pick<Listing, 'division' | 'sex_division'>): string {
-  return `${SEX[l.sex_division] ?? l.sex_division} ${DIVISION[l.division] ?? l.division}`
+export function bracketLabel(
+  l: Pick<Listing, 'divisions' | 'sex_division'>,
+): string {
+  const divs = (l.divisions ?? []).map((d) => DIVISION[d] ?? d).join(' / ')
+  return `${SEX[l.sex_division] ?? l.sex_division} ${divs}`
 }
 
 export function needsLabel(current_size: number): string {

@@ -8,7 +8,7 @@ type Row = {
   email: string
   phone: string
   teammate_names: string | null
-  division: string
+  divisions: string[]
   sex_division: string
   current_size: number
   notes: string | null
@@ -108,7 +108,7 @@ export default function Admin() {
     if (!rows) return
     const cols: (keyof Row)[] = [
       'created_at', 'contact_name', 'email', 'phone', 'teammate_names',
-      'division', 'sex_division', 'current_size', 'status', 'notes',
+      'divisions', 'sex_division', 'current_size', 'status', 'notes',
     ]
     const esc = (v: unknown) => {
       const s = v == null ? '' : String(v)
@@ -205,7 +205,8 @@ export default function Admin() {
                     <div className="text-muted2">{r.phone}</div>
                   </td>
                   <td className="px-3 py-3 capitalize text-muted">
-                    {r.sex_division === 'male' ? "Men's" : "Women's"} {r.division}
+                    {r.sex_division === 'male' ? "Men's" : "Women's"}{' '}
+                    {(r.divisions ?? []).join(', ')}
                   </td>
                   <td className="px-3 py-3 text-muted">
                     {r.current_size === 1 ? 'Solo' : 'Pair'}
@@ -286,7 +287,7 @@ function EditPanel({
     email: row.email,
     phone: row.phone,
     teammate_names: row.teammate_names ?? '',
-    division: row.division,
+    divisions: row.divisions ?? [],
     sex_division: row.sex_division,
     current_size: row.current_size,
     notes: row.notes ?? '',
@@ -332,17 +333,35 @@ function EditPanel({
             </Field>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Division">
-              <select
-                className="field"
-                value={f.division}
-                onChange={(e) => set('division')(e.target.value)}
-              >
-                <option value="rx">Rx</option>
-                <option value="scaled">Scaled</option>
-                <option value="masters">Masters</option>
-              </select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Divisions">
+              <div className="flex gap-1.5">
+                {['rx', 'scaled', 'masters'].map((d) => {
+                  const on = f.divisions.includes(d)
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() =>
+                        setF((prev) => ({
+                          ...prev,
+                          divisions: on
+                            ? prev.divisions.filter((x) => x !== d)
+                            : [...prev.divisions, d],
+                        }))
+                      }
+                      className={
+                        'flex-1 border px-2 py-2 text-xs uppercase tracking-wide transition ' +
+                        (on
+                          ? 'border-red bg-red text-white'
+                          : 'border-line text-muted hover:border-muted2')
+                      }
+                    >
+                      {d}
+                    </button>
+                  )
+                })}
+              </div>
             </Field>
             <Field label="Category">
               <select
@@ -428,7 +447,8 @@ function DeletePanel({
           <p className="text-txt">{row.contact_name}</p>
           <p className="text-muted2">{row.email}</p>
           <p className="text-muted2">
-            {row.sex_division === 'male' ? "Men's" : "Women's"} {row.division} ·{' '}
+            {row.sex_division === 'male' ? "Men's" : "Women's"}{' '}
+            {(row.divisions ?? []).join(', ')} ·{' '}
             {row.current_size === 1 ? 'Solo' : 'Pair'} · {row.status}
           </p>
         </div>

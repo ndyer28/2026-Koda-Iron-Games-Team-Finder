@@ -11,7 +11,7 @@ export type PublicListing = {
   id: string
   created_at: string
   first_name: string
-  division: 'rx' | 'scaled' | 'masters'
+  divisions: ('rx' | 'scaled' | 'masters')[]
   sex_division: 'male' | 'female'
   current_size: 1 | 2
   notes: string | null

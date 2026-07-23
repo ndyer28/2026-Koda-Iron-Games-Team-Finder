@@ -8,7 +8,7 @@ export type SubmitPayload = {
   contact_name: string
   email: string
   phone: string
-  division: Division
+  divisions: Division[]
   sex_division: SexDivision
   current_size: 1 | 2
   teammate_names: string | null
@@ -51,9 +51,12 @@ export function parseSubmission(
     return { ok: false, error: 'Please enter a valid phone number.' }
   }
 
-  const division = str(b.division) as Division
-  if (!DIVISIONS.includes(division)) {
-    return { ok: false, error: 'Please choose a division.' }
+  const rawDivisions = Array.isArray(b.divisions) ? b.divisions : []
+  const divisions = [...new Set(rawDivisions.map(str))].filter((d): d is Division =>
+    DIVISIONS.includes(d as Division),
+  )
+  if (divisions.length === 0) {
+    return { ok: false, error: 'Please choose at least one division.' }
   }
 
   const sex_division = str(b.sex_division) as SexDivision
@@ -75,7 +78,7 @@ export function parseSubmission(
       contact_name,
       email,
       phone,
-      division,
+      divisions,
       sex_division,
       current_size,
       teammate_names,
