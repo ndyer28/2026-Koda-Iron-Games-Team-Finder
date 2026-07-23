@@ -57,6 +57,9 @@ Deno.serve(async (req) => {
     // the generic "add your own listing" prompt on a listing they already own.
     id: listing.id,
     first_name: listing.contact_name.trim().split(' ')[0],
+    // Full name, for the holder's own card. Still no email or phone here —
+    // those stay out so a forwarded manage link can't expose contact details.
+    contact_name: listing.contact_name,
     bracket: bracketLabel(listing),
     current_size: listing.current_size,
     notes: listing.notes,

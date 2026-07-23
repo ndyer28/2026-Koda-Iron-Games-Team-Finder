@@ -27,6 +27,7 @@ export default function Board() {
   // contact info, and the server decides what this map contains.
   const [contacts, setContacts] = useState<Map<string, Contact>>(new Map())
   const [ownId, setOwnId] = useState<string | null>(null)
+  const [ownName, setOwnName] = useState<string | null>(null)
 
   useEffect(() => {
     supabase
@@ -55,6 +56,7 @@ export default function Board() {
       .then((body) => {
         if (!body) return
         if (body.listing?.id) setOwnId(body.listing.id)
+        if (body.listing?.contact_name) setOwnName(body.listing.contact_name)
         if (!body.matches) return
         setContacts(
           new Map(
@@ -179,6 +181,7 @@ export default function Board() {
                           listing={l}
                           contact={contacts.get(l.id)}
                           isOwn={l.id === ownId}
+                          ownName={ownName}
                         />
                       ))}
                     </div>
@@ -231,10 +234,12 @@ function Card({
   listing,
   contact,
   isOwn,
+  ownName,
 }: {
   listing: PublicListing
   contact?: Contact
   isOwn?: boolean
+  ownName?: string | null
 }) {
   const [asked, setAsked] = useState(false)
   const short = 3 - listing.current_size
@@ -251,8 +256,8 @@ function Card({
       }
     >
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="font-semibold text-txt">
-          {contact ? contact.contact_name : listing.first_name}
+        <h3 className="min-w-0 break-words font-semibold text-txt">
+          {contact?.contact_name ?? (isOwn && ownName) ?? listing.first_name}
         </h3>
         <span className="shrink-0 text-xs uppercase tracking-wide text-muted2">
           {isOwn && <span className="text-muted">You · </span>}
