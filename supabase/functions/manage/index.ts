@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
   // They already know their own details; echoing them back only creates a
   // way for a leaked manage link to expose contact info.
   const safe = {
+    // id so /board can mark the viewer's own card rather than showing them
+    // the generic "add your own listing" prompt on a listing they already own.
+    id: listing.id,
     first_name: listing.contact_name.trim().split(' ')[0],
     bracket: bracketLabel(listing),
     current_size: listing.current_size,

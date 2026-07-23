@@ -26,6 +26,7 @@ export default function Board() {
   // Empty for anyone without a listing — the board itself never carries
   // contact info, and the server decides what this map contains.
   const [contacts, setContacts] = useState<Map<string, Contact>>(new Map())
+  const [ownId, setOwnId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase
@@ -52,7 +53,9 @@ export default function Board() {
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((body) => {
-        if (!body?.matches) return
+        if (!body) return
+        if (body.listing?.id) setOwnId(body.listing.id)
+        if (!body.matches) return
         setContacts(
           new Map(
             (body.matches as (Contact & { id: string })[]).map((m) => [
@@ -171,7 +174,12 @@ export default function Board() {
                     </h2>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {bucket.map((l) => (
-                        <Card key={l.id} listing={l} contact={contacts.get(l.id)} />
+                        <Card
+                          key={l.id}
+                          listing={l}
+                          contact={contacts.get(l.id)}
+                          isOwn={l.id === ownId}
+                        />
                       ))}
                     </div>
                   </section>
@@ -222,9 +230,11 @@ function Filters<T extends string | number>({
 function Card({
   listing,
   contact,
+  isOwn,
 }: {
   listing: PublicListing
   contact?: Contact
+  isOwn?: boolean
 }) {
   const [asked, setAsked] = useState(false)
   const short = 3 - listing.current_size
@@ -233,7 +243,11 @@ function Card({
     <article
       className={
         'border p-4 ' +
-        (contact ? 'border-red/50 bg-panel' : 'border-line bg-panel')
+        (contact
+          ? 'border-red/50 bg-panel'
+          : isOwn
+            ? 'border-muted2/60 bg-panel'
+            : 'border-line bg-panel')
       }
     >
       <div className="flex items-baseline justify-between gap-2">
@@ -241,6 +255,7 @@ function Card({
           {contact ? contact.contact_name : listing.first_name}
         </h3>
         <span className="shrink-0 text-xs uppercase tracking-wide text-muted2">
+          {isOwn && <span className="text-muted">You · </span>}
           {listing.current_size === 1 ? 'Solo' : 'Pair'}
         </span>
       </div>
@@ -282,6 +297,18 @@ function Card({
               </dd>
             </div>
           </dl>
+        </div>
+      ) : isOwn ? (
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted2">
+            This is you
+          </p>
+          <Link
+            to={`/manage/${getToken() ?? ''}`}
+            className="mt-1.5 inline-block text-sm text-muted underline underline-offset-4 hover:text-txt"
+          >
+            Manage my listing
+          </Link>
         </div>
       ) : asked ? (
         <p className="mt-4 bg-panel2 px-3 py-2.5 text-sm leading-relaxed text-muted">
