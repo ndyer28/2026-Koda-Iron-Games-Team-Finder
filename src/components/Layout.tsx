@@ -52,10 +52,17 @@ function Header() {
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-5">
-        <Link to="/" className="group leading-none">
-          <span className="eyebrow block">{EVENT.name}</span>
-          <span className="mt-1.5 block font-display text-2xl uppercase tracking-wide text-txt">
-            Team Finder
+        <Link to="/" className="flex items-center gap-3 leading-none">
+          <img
+            src="/mark.png"
+            alt="Koda Iron Games"
+            className="h-12 w-auto shrink-0 sm:h-14"
+          />
+          <span className="border-l border-line pl-3">
+            <span className="eyebrow block">{EVENT.name}</span>
+            <span className="mt-1 block font-display text-xl uppercase tracking-wide text-txt sm:text-2xl">
+              Team Finder
+            </span>
           </span>
         </Link>
 
@@ -100,19 +107,28 @@ function Tab({ to, end, children }: { to: string; end?: boolean; children: React
 function Footer() {
   return (
     <footer className="border-t border-line px-4 py-8">
-      <div className="mx-auto max-w-5xl space-y-2 text-xs text-muted2">
-        <p className="font-semibold uppercase tracking-[0.14em] text-muted">
-          {EVENT.dates} · {EVENT.venue}
-        </p>
-        <p>Teams of three · Rx, Scaled, Masters · Men's and Women's</p>
-        <p>
-          Managing an existing listing? Use the link in your confirmation email,
-          or{' '}
-          <Link to="/recover" className="text-muted underline underline-offset-4">
-            have it sent again
-          </Link>
-          .
-        </p>
+      <div className="mx-auto flex max-w-5xl flex-wrap items-end justify-between gap-6">
+        <div className="space-y-2 text-xs text-muted2">
+          <p className="font-semibold uppercase tracking-[0.14em] text-muted">
+            {EVENT.dates} · {EVENT.venue}
+          </p>
+          <p>Teams of three · Rx, Scaled, Masters · Men's and Women's</p>
+          <p>
+            Managing an existing listing? Use the link in your confirmation
+            email, or{' '}
+            <Link to="/recover" className="text-muted underline underline-offset-4">
+              have it sent again
+            </Link>
+            .
+          </p>
+        </div>
+
+        {/* Full lockup lives here, where the "presented by" line is legible. */}
+        <img
+          src="/logo.png"
+          alt="Koda Iron Games, presented by WODprep"
+          className="h-24 w-auto opacity-80"
+        />
       </div>
     </footer>
   )

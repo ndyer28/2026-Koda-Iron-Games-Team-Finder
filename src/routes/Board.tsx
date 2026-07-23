@@ -257,7 +257,9 @@ function Card({
     >
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="min-w-0 break-words font-semibold text-txt">
-          {contact?.contact_name ?? (isOwn && ownName) ?? listing.first_name}
+          {/* `??` does not fall through on `false`, so this must be a ternary:
+              isOwn is false (not undefined) for other people's cards. */}
+          {contact?.contact_name ?? (isOwn && ownName ? ownName : listing.first_name)}
         </h3>
         <span className="shrink-0 text-xs uppercase tracking-wide text-muted2">
           {isOwn && <span className="text-muted">You · </span>}
