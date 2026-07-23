@@ -94,6 +94,22 @@ Add and verify your sending domain. **Do not skip this** — the fallback sender
 `onboarding@resend.dev` only delivers to the address that owns the Resend
 account. Every other athlete silently receives nothing.
 
+Verification needs three DNS records, and the domain is not ready until *all*
+of them pass — a green tick on the DKIM row alone is not enough:
+
+| Type | Host | Purpose |
+| --- | --- | --- |
+| TXT | `resend._domainkey` | DKIM — proves you own the domain |
+| MX | `send` | SPF — **authorises sending** |
+| TXT | `send` | SPF — **authorises sending** |
+
+Watch the **domain** status, not the per-record badges. Sends fail with a
+generic Resend error while it still says Pending.
+
+For this deployment: `kodacrossfitironview.com`, registered at Namecheap,
+verified 22 July 2026. Namecheap appends the domain to the host automatically,
+so the host field is `send`, not `send.kodacrossfitironview.com`.
+
 Free tier is 3,000/month but **100/day**. Bracket notifications scale with
 bracket size, so a signup rush can hit the daily cap. See "Email budget" below.
 
@@ -201,6 +217,8 @@ runs `/api/ping` daily at 12:00 UTC.
   with `delete from submission_attempts;`
 - **`onboarding@resend.dev` only mails the Resend account owner.** Everything
   looks like it works; nothing arrives. Verify the domain before showing anyone.
+- **Edge Functions read secrets at module load.** After `supabase secrets set`,
+  redeploy (`npm run deploy:functions`) or running instances keep the old value.
 - **A failed confirmation email returns an error** rather than "check your
   email", so nobody waits on mail that will never come. Failed sends land in
   `email_log` with the reason.
