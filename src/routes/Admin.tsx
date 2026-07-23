@@ -27,6 +27,8 @@ export default function Admin() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState<Row | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<Row | null>(null)
 
   const call = useCallback(
     async (payload: Record<string, unknown>) => {
@@ -65,6 +67,36 @@ export default function Admin() {
       await call({ action: 'set_status', id, status })
       const body = await call({ action: 'list' })
       setRows(body.listings as Row[])
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveEdit(patch: Partial<Row> & { id: string }) {
+    setBusy(true)
+    setError(null)
+    try {
+      await call({ action: 'update', ...patch })
+      const body = await call({ action: 'list' })
+      setRows(body.listings as Row[])
+      setEditing(null)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function doDelete(row: Row) {
+    setBusy(true)
+    setError(null)
+    try {
+      await call({ action: 'delete', id: row.id })
+      const body = await call({ action: 'list' })
+      setRows(body.listings as Row[])
+      setConfirmDelete(null)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -153,6 +185,7 @@ export default function Admin() {
                 <th className="px-3 py-2.5 font-medium">Size</th>
                 <th className="px-3 py-2.5 font-medium">Notes</th>
                 <th className="px-3 py-2.5 font-medium">Status</th>
+                <th className="px-3 py-2.5 font-medium"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -190,12 +223,255 @@ export default function Admin() {
                       ))}
                     </select>
                   </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-right">
+                    <button
+                      onClick={() => setEditing(r)}
+                      disabled={busy}
+                      className="text-sm text-muted underline underline-offset-4 hover:text-txt disabled:opacity-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(r)}
+                      disabled={busy}
+                      className="ml-3 text-sm text-red underline underline-offset-4 hover:text-redhi disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {editing && (
+        <EditPanel
+          row={editing}
+          busy={busy}
+          onCancel={() => setEditing(null)}
+          onSave={saveEdit}
+        />
+      )}
+
+      {confirmDelete && (
+        <DeletePanel
+          row={confirmDelete}
+          busy={busy}
+          onCancel={() => setConfirmDelete(null)}
+          onConfirm={() => doDelete(confirmDelete)}
+        />
+      )}
     </main>
+  )
+}
+
+const overlay =
+  'fixed inset-0 z-50 grid place-items-center bg-ink/80 px-4 py-10 overflow-y-auto'
+
+function EditPanel({
+  row,
+  busy,
+  onCancel,
+  onSave,
+}: {
+  row: Row
+  busy: boolean
+  onCancel: () => void
+  onSave: (patch: Partial<Row> & { id: string }) => void
+}) {
+  const [f, setF] = useState({
+    contact_name: row.contact_name,
+    email: row.email,
+    phone: row.phone,
+    teammate_names: row.teammate_names ?? '',
+    division: row.division,
+    sex_division: row.sex_division,
+    current_size: row.current_size,
+    notes: row.notes ?? '',
+  })
+
+  const set = (k: keyof typeof f) => (v: string | number) =>
+    setF((prev) => ({ ...prev, [k]: v }))
+
+  return (
+    <div className={overlay} onClick={onCancel}>
+      <div
+        className="w-full max-w-lg border border-line bg-panel p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg text-txt">Edit listing</h2>
+        <p className="mt-1 text-xs text-muted2">
+          The athlete's confirm and manage links are unaffected.
+        </p>
+
+        <div className="mt-5 space-y-4">
+          <Field label="Name">
+            <input
+              className="field"
+              value={f.contact_name}
+              onChange={(e) => set('contact_name')(e.target.value)}
+            />
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Email">
+              <input
+                className="field"
+                value={f.email}
+                onChange={(e) => set('email')(e.target.value)}
+              />
+            </Field>
+            <Field label="Phone">
+              <input
+                className="field"
+                value={f.phone}
+                onChange={(e) => set('phone')(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Division">
+              <select
+                className="field"
+                value={f.division}
+                onChange={(e) => set('division')(e.target.value)}
+              >
+                <option value="rx">Rx</option>
+                <option value="scaled">Scaled</option>
+                <option value="masters">Masters</option>
+              </select>
+            </Field>
+            <Field label="Category">
+              <select
+                className="field"
+                value={f.sex_division}
+                onChange={(e) => set('sex_division')(e.target.value)}
+              >
+                <option value="male">Men's</option>
+                <option value="female">Women's</option>
+              </select>
+            </Field>
+            <Field label="Size">
+              <select
+                className="field"
+                value={f.current_size}
+                onChange={(e) => set('current_size')(Number(e.target.value))}
+              >
+                <option value={1}>Solo</option>
+                <option value={2}>Pair</option>
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Teammate names">
+            <input
+              className="field"
+              value={f.teammate_names}
+              onChange={(e) => set('teammate_names')(e.target.value)}
+            />
+          </Field>
+
+          <Field label="Notes">
+            <textarea
+              className="field resize-none"
+              rows={3}
+              maxLength={300}
+              value={f.notes}
+              onChange={(e) => set('notes')(e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            disabled={busy}
+            onClick={() => onSave({ id: row.id, ...f })}
+            className="btn-primary flex-1"
+          >
+            {busy ? 'Saving…' : 'Save changes'}
+          </button>
+          <button disabled={busy} onClick={onCancel} className="btn-ghost">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DeletePanel({
+  row,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  row: Row
+  busy: boolean
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  const [typed, setTyped] = useState('')
+  const armed = typed.trim().toLowerCase() === 'delete'
+
+  return (
+    <div className={overlay} onClick={onCancel}>
+      <div
+        className="w-full max-w-md border border-red/50 bg-panel p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg text-txt">Delete this listing?</h2>
+
+        <div className="mt-4 border border-line bg-panel2 p-3 text-sm">
+          <p className="text-txt">{row.contact_name}</p>
+          <p className="text-muted2">{row.email}</p>
+          <p className="text-muted2">
+            {row.sex_division === 'male' ? "Men's" : "Women's"} {row.division} ·{' '}
+            {row.current_size === 1 ? 'Solo' : 'Pair'} · {row.status}
+          </p>
+        </div>
+
+        <p className="mt-4 text-sm leading-relaxed text-muted">
+          This permanently removes the row. It cannot be undone, and their
+          confirm and manage links stop working immediately.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-muted">
+          To take someone off the board reversibly, set their status to{' '}
+          <strong className="text-txt">closed</strong> instead.
+        </p>
+
+        <label className="label mt-5">Type DELETE to confirm</label>
+        <input
+          className="field"
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoFocus
+        />
+
+        <div className="mt-5 flex gap-3">
+          <button
+            disabled={busy || !armed}
+            onClick={onConfirm}
+            className="btn-primary flex-1"
+          >
+            {busy ? 'Deleting…' : 'Delete permanently'}
+          </button>
+          <button disabled={busy} onClick={onCancel} className="btn-ghost">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="label">{label}</p>
+      {children}
+    </div>
   )
 }
